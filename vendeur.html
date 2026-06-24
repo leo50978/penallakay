@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Penal Lakay - Vendeur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              pitch: {
+                base: "#02070d",
+                panel: "rgba(5, 13, 22, 0.56)",
+                line: "rgba(255, 255, 255, 0.12)",
+                accent: "#69f0b1",
+                goal: "#ffd463",
+                save: "#ff7566",
+                pending: "rgba(255, 255, 255, 0.22)",
+                text: "#f6fbff",
+                muted: "rgba(246, 251, 255, 0.76)"
+              }
+            },
+            fontFamily: {
+              display: ["Trebuchet MS", "Segoe UI", "sans-serif"]
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
+    <script>
+      window.firebaseConfig = {
+        apiKey: "AIzaSyBrXTbRG9IrQAnNyC7JCh0Uf6XfLouPKu4",
+        authDomain: "penallakay.firebaseapp.com",
+        projectId: "penallakay",
+        storageBucket: "penallakay.firebasestorage.app",
+        messagingSenderId: "218407706721",
+        appId: "1:218407706721:web:2e6b902b21f35225b10a20",
+        measurementId: "G-NZZZ5GZFML"
+      };
+    </script>
+  </head>
+  <body class="m-0 min-h-screen bg-black font-display text-pitch-text">
+    <main class="vendor-page">
+      <picture class="home-background" aria-hidden="true">
+        <source media="(max-width: 767px)" srcset="assets/images/decorphone.png" />
+        <img class="home-background-image" src="assets/images/decordesktop.png" alt="" aria-hidden="true" draggable="false" />
+      </picture>
+
+      <section class="vendor-shell">
+        <header class="profile-topbar">
+          <a class="profile-back" href="index.html" aria-label="Retounen sou akey">
+            <i data-lucide="arrow-left"></i>
+          </a>
+          <h1 class="profile-heading">Vendeur</h1>
+          <button id="vendor-logout" class="vendor-icon-button is-hidden" type="button" aria-label="Dekonekte">
+            <i data-lucide="log-out" aria-hidden="true"></i>
+          </button>
+        </header>
+
+        <section id="vendor-login-panel" class="vendor-panel">
+          <div class="vendor-panel-head">
+            <span class="vendor-kicker">Kont vendeur</span>
+            <h2>Konekte pou kredite coin</h2>
+          </div>
+          <p id="vendor-login-feedback" class="auth-feedback" aria-live="polite"></p>
+          <form id="vendor-login-form" class="auth-form">
+            <label>
+              <span>Non itilizate</span>
+              <input type="text" name="username" autocomplete="username" placeholder="Antre non ou" />
+            </label>
+            <label>
+              <span>Modpas</span>
+              <span class="auth-password">
+                <input type="password" name="password" autocomplete="current-password" placeholder="Modpas ou" />
+                <button type="button" class="auth-password-toggle" data-password-toggle aria-label="Montre modpas la">
+                  <i data-lucide="eye" aria-hidden="true"></i>
+                </button>
+              </span>
+            </label>
+            <button class="auth-submit" type="submit">Konekte</button>
+          </form>
+        </section>
+
+        <section id="vendor-app-panel" class="vendor-app is-hidden">
+          <section class="vendor-balance-card">
+            <div>
+              <span class="vendor-kicker">Coin sou kont ou</span>
+              <strong id="vendor-balance">0</strong>
+            </div>
+            <img src="assets/images/coin.png" alt="" aria-hidden="true" draggable="false" />
+          </section>
+
+          <section class="vendor-panel">
+            <div class="vendor-panel-head">
+              <span class="vendor-kicker">Recherche user</span>
+              <h2>Jwenn jwè a</h2>
+            </div>
+            <p id="vendor-feedback" class="auth-feedback" aria-live="polite"></p>
+            <form id="vendor-search-form" class="vendor-search-form">
+              <label>
+                <span>Non itilizate</span>
+                <input type="search" name="username" autocomplete="off" placeholder="Ekri non user la" />
+              </label>
+              <button type="submit" aria-label="Chache user">
+                <i data-lucide="search" aria-hidden="true"></i>
+              </button>
+            </form>
+
+            <article id="vendor-result" class="vendor-user-card is-hidden">
+              <div class="vendor-user-meta">
+                <span class="vendor-user-avatar"><i data-lucide="user-round" aria-hidden="true"></i></span>
+                <div>
+                  <strong id="vendor-result-name">User</strong>
+                  <span id="vendor-result-coins">0 coin</span>
+                </div>
+              </div>
+              <form id="vendor-credit-form" class="vendor-credit-form">
+                <label>
+                  <span>Kantite coin</span>
+                  <input type="number" name="amount" min="1" step="1" inputmode="numeric" placeholder="100" />
+                </label>
+                <button class="auth-submit" type="submit">Kredite kont lan</button>
+              </form>
+            </article>
+          </section>
+
+          <section class="vendor-panel">
+            <div class="vendor-panel-head">
+              <span class="vendor-kicker">Istorik</span>
+              <h2>Denye tranzaksyon yo</h2>
+            </div>
+            <div id="vendor-history-list" class="vendor-history-list">
+              <article class="vendor-history-empty">
+                <strong>Pa gen tranzaksyon toujou.</strong>
+                <span>Le ou kredite yon kont, li ap paret la.</span>
+              </article>
+            </div>
+            <button id="vendor-history-more" class="vendor-history-more is-hidden" type="button">Montre plis</button>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="vendeur.js"></script>
+  </body>
+</html>

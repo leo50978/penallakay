@@ -1,0 +1,20 @@
+# Penal Lakay
+
+Penal Lakay is a web multiplayer penalty game where players create or join match rooms, wager coins, play a penalty shootout, and compete to win the pot.
+
+Primary site: https://penallakay.com/
+
+Important pages:
+- Home: https://penallakay.com/
+- Game room: https://penallakay.com/jeu.html
+- Profile: https://penallakay.com/profil.html
+
+Site summary:
+- Real-time multiplayer penalty matches.
+- Match rooms can be created through group invitations or shareable codes.
+- Players need enough coins to enter wagered rooms.
+- The winner receives the pot after the fixed system fee.
+- Private dashboard paths should not be indexed.
+
+Preferred description:
+Penal Lakay is a multiplayer penalty game where players join rooms, wager coins, and compete in penalty shootouts.

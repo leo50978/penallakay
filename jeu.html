@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jouer au penalti multijoueur | Penal Lakay</title>
+    <meta
+      name="description"
+      content="Entre dans une salle Penal Lakay, joue une seance de tirs au but multijoueur, mise des coins et tente de gagner le pot."
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://penallakay.com/jeu.html" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="icon" href="/assets/images/logo%20(2).png" />
+    <link rel="apple-touch-icon" href="/assets/images/logo%20(2).png" />
+    <meta name="theme-color" content="#02070d" />
+    <meta property="og:site_name" content="Penal Lakay" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Jouer au penalti multijoueur | Penal Lakay" />
+    <meta property="og:description" content="Rejoins une salle de penalti multijoueur, joue contre un autre joueur et gagne des coins." />
+    <meta property="og:url" content="https://penallakay.com/jeu.html" />
+    <meta property="og:image" content="https://penallakay.com/assets/images/decordesktop.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Jouer au penalti multijoueur | Penal Lakay" />
+    <meta name="twitter:description" content="Salle de penalti multijoueur avec mise en coins et seance de tirs au but." />
+    <meta name="twitter:image" content="https://penallakay.com/assets/images/decordesktop.png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              pitch: {
+                base: "#02070d",
+                panel: "rgba(5, 13, 22, 0.56)",
+                line: "rgba(255, 255, 255, 0.12)",
+                accent: "#69f0b1",
+                goal: "#ffd463",
+                save: "#ff7566",
+                pending: "rgba(255, 255, 255, 0.22)",
+                text: "#f6fbff",
+                muted: "rgba(246, 251, 255, 0.76)"
+              }
+            },
+            boxShadow: {
+              panel: "0 18px 40px rgba(0, 0, 0, 0.28)"
+            },
+            fontFamily: {
+              display: ["Trebuchet MS", "Segoe UI", "sans-serif"]
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
+    <script>
+      window.firebaseConfig = {
+        apiKey: "AIzaSyBrXTbRG9IrQAnNyC7JCh0Uf6XfLouPKu4",
+        authDomain: "penallakay.firebaseapp.com",
+        projectId: "penallakay",
+        storageBucket: "penallakay.firebasestorage.app",
+        messagingSenderId: "218407706721",
+        appId: "1:218407706721:web:2e6b902b21f35225b10a20",
+        measurementId: "G-NZZZ5GZFML"
+      };
+    </script>
+  </head>
+  <body class="m-0 h-full w-full overflow-hidden bg-black font-display text-pitch-text" data-page="game">
+    <main class="game-wrapper is-game relative flex h-dvh min-h-screen w-screen items-center justify-center overflow-hidden bg-black">
+      <audio id="stadium-audio" class="sr-only" src="assets/son/sonstade.mp3" preload="auto" loop></audio>
+      <audio id="bg2-audio" class="sr-only" src="assets/son/bg2.mp3" preload="auto" loop></audio>
+      <audio id="shoot-audio" class="sr-only" src="assets/son/shoot.mp3" preload="auto"></audio>
+      <audio id="goal-audio" class="sr-only" src="assets/son/goal.mp3" preload="auto"></audio>
+      <audio id="save-audio" class="sr-only" src="assets/son/arret.mp3" preload="auto"></audio>
+
+      <picture class="decor-frame pointer-events-none absolute inset-0 block">
+        <source media="(max-width: 767px)" srcset="assets/images/decorphone.png" />
+        <img
+          class="decor absolute left-0 top-0 h-full w-full select-none object-cover"
+          src="assets/images/decordesktop.png"
+          alt="Decor du terrain de penalty"
+          draggable="false"
+        />
+      </picture>
+
+      <section class="game-stage relative h-dvh w-screen origin-center overflow-hidden bg-transparent" aria-label="Scene de penalty">
+        <img
+          class="decor sr-only"
+          src="assets/images/decorphone.png"
+          alt="Decor du terrain de penalty"
+          draggable="false"
+        />
+
+        <section class="scoreboard" aria-label="Tableau de tirs au but">
+          <div class="team-panel">
+            <span class="team-label">Toi</span>
+            <span class="game-coin-balance">Solde: <strong id="game-coin-balance">0</strong> coins</span>
+            <strong id="player-score" class="sr-only">0</strong>
+            <div class="penalty-track" id="player-track" aria-hidden="true">
+              <span class="track-dot"></span>
+              <span class="track-dot"></span>
+              <span class="track-dot"></span>
+              <span class="track-dot"></span>
+              <span class="track-dot"></span>
+            </div>
+          </div>
+
+          <div class="match-core">
+            <div class="round-badge sr-only" id="round-label">Tir 1</div>
+            <div class="score-split"><span id="player-score-main">0</span><span> - </span><span id="cpu-score-main">0</span></div>
+            <div class="turn-badge" id="turn-label">Ton tir</div>
+            <div id="turn-countdown" class="turn-countdown" hidden>
+              <span id="turn-countdown-value" class="turn-countdown-value">15</span>
+              <span class="turn-countdown-ring" aria-hidden="true"></span>
+            </div>
+          </div>
+
+          <div class="team-panel">
+            <span id="opponent-name-label" class="team-label">Adversaire</span>
+            <strong id="cpu-score" class="sr-only">0</strong>
+            <div class="penalty-track" id="cpu-track" aria-hidden="true">
+              <span class="track-dot"></span>
+              <span class="track-dot"></span>
+              <span class="track-dot"></span>
+              <span class="track-dot"></span>
+              <span class="track-dot"></span>
+            </div>
+          </div>
+        </section>
+
+        <div class="shot-map" aria-label="Zones de tir">
+          <button class="shot-target" type="button" data-zone="top-left" aria-label="Tirer en haut a gauche">
+            <span class="shot-target-ring"></span>
+            <span class="shot-target-dot"></span>
+          </button>
+          <button class="shot-target" type="button" data-zone="top-right" aria-label="Tirer en haut a droite">
+            <span class="shot-target-ring"></span>
+            <span class="shot-target-dot"></span>
+          </button>
+          <button class="shot-target" type="button" data-zone="middle-center" aria-label="Tirer au milieu au centre">
+            <span class="shot-target-ring"></span>
+            <span class="shot-target-dot"></span>
+          </button>
+          <button class="shot-target" type="button" data-zone="bottom-left" aria-label="Tirer en bas a gauche">
+            <span class="shot-target-ring"></span>
+            <span class="shot-target-dot"></span>
+          </button>
+          <button class="shot-target" type="button" data-zone="bottom-right" aria-label="Tirer en bas a droite">
+            <span class="shot-target-ring"></span>
+            <span class="shot-target-dot"></span>
+          </button>
+        </div>
+
+        <div class="goal-svg-wrap is-logic-layer" aria-hidden="true">
+          <div id="goal-mouth" class="goal-hitbox"></div>
+        </div>
+
+        <div class="goal-targets is-logic-layer" aria-label="Zone de tir">
+          <button id="aim-target" class="aim-target" type="button" aria-label="Viseur de tir draggable">
+            <span class="aim-core"></span>
+            <span class="aim-tick aim-tick-top"></span>
+            <span class="aim-tick aim-tick-right"></span>
+            <span class="aim-tick aim-tick-bottom"></span>
+            <span class="aim-tick aim-tick-left"></span>
+          </button>
+        </div>
+
+        <img
+          id="keeper"
+          class="keeper keeper-hidden absolute z-[5] select-none"
+          src="assets/images/gardienframe1.png"
+          alt="Gardien de but"
+          draggable="false"
+        />
+
+        <div class="ball-wrapper absolute z-[7]">
+          <img
+            id="ball"
+            class="ball h-full w-full cursor-grab select-none object-contain"
+            src="assets/images/ballon.png"
+            alt="Ballon de foot"
+            draggable="false"
+          />
+        </div>
+
+        <div id="status-text" class="status-banner">En attente du premier tir.</div>
+      </section>
+
+      <section id="match-result-modal" class="match-result-modal" aria-hidden="true" hidden>
+        <div class="match-result-card" role="dialog" aria-modal="true" aria-labelledby="match-result-title">
+          <p id="match-result-kicker" class="match-result-kicker">Match fini</p>
+          <strong id="match-result-title" class="match-result-title">Victoire</strong>
+          <p id="match-result-message" class="match-result-message">Ou ka mande yon revanche.</p>
+          <div class="match-result-actions">
+            <button id="request-rematch-button" class="match-result-action match-result-primary" type="button">Mande revanche</button>
+            <button id="accept-rematch-button" class="match-result-action match-result-primary" type="button" hidden>Aksepte revanche</button>
+            <button id="close-result-modal" class="match-result-action" type="button">Femen</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="script.js" type="module"></script>
+  </body>
+</html>

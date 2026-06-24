@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Penal Lakay - Profil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              pitch: {
+                base: "#02070d",
+                panel: "rgba(5, 13, 22, 0.56)",
+                line: "rgba(255, 255, 255, 0.12)",
+                accent: "#69f0b1",
+                goal: "#ffd463",
+                save: "#ff7566",
+                pending: "rgba(255, 255, 255, 0.22)",
+                text: "#f6fbff",
+                muted: "rgba(246, 251, 255, 0.76)"
+              }
+            },
+            boxShadow: {
+              panel: "0 18px 40px rgba(0, 0, 0, 0.28)"
+            },
+            fontFamily: {
+              display: ["Trebuchet MS", "Segoe UI", "sans-serif"]
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
+    <script>
+      window.firebaseConfig = {
+        apiKey: "AIzaSyBrXTbRG9IrQAnNyC7JCh0Uf6XfLouPKu4",
+        authDomain: "penallakay.firebaseapp.com",
+        projectId: "penallakay",
+        storageBucket: "penallakay.firebasestorage.app",
+        messagingSenderId: "218407706721",
+        appId: "1:218407706721:web:2e6b902b21f35225b10a20",
+        measurementId: "G-NZZZ5GZFML"
+      };
+    </script>
+  </head>
+  <body class="m-0 min-h-screen bg-black font-display text-pitch-text">
+    <main class="profile-page">
+      <picture class="home-background" aria-hidden="true">
+        <source media="(max-width: 767px)" srcset="assets/images/decorphone.png" />
+        <img class="home-background-image" src="assets/images/decordesktop.png" alt="" aria-hidden="true" draggable="false" />
+      </picture>
+
+      <section class="profile-shell">
+        <header class="profile-topbar">
+          <a class="profile-back" href="index.html" aria-label="Retounen sou akÃ¨y">
+            <i data-lucide="arrow-left"></i>
+          </a>
+          <h1 class="profile-heading">Profil</h1>
+          <div class="profile-topbar-spacer" aria-hidden="true"></div>
+        </header>
+
+        <section class="profile-panel">
+          <div class="profile-identity">
+            <div class="profile-avatar">
+              <i data-lucide="user-round"></i>
+            </div>
+            <div class="profile-meta">
+              <strong id="profile-username">Jwe</strong>
+              <span id="profile-uid">ID jwÃ¨</span>
+            </div>
+          </div>
+
+          <div class="profile-info-list">
+            <div class="profile-info-row">
+              <span>Non itilizate</span>
+              <strong id="profile-username-inline">-</strong>
+            </div>
+            <div class="profile-info-row">
+              <span>Coins disponibles</span>
+              <strong id="profile-coins">0</strong>
+            </div>
+            <div class="profile-info-row">
+              <span>Kont aktif</span>
+              <strong>Wi</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="profile-panel">
+          <h2 class="profile-section-title">Chanje modpas</h2>
+          <p id="profile-feedback" class="auth-feedback" aria-live="polite"></p>
+
+          <form id="password-form" class="auth-form">
+            <label>
+              <span>Nouvo modpas</span>
+              <span class="auth-password">
+                <input type="password" name="password" autocomplete="new-password" placeholder="Antre nouvo modpas la" />
+                <button type="button" class="auth-password-toggle" data-password-toggle aria-label="Montre modpas la">
+                  <i data-lucide="eye" aria-hidden="true"></i>
+                </button>
+              </span>
+            </label>
+            <label>
+              <span>Konfime nouvo modpas la</span>
+              <span class="auth-password">
+                <input type="password" name="confirmPassword" autocomplete="new-password" placeholder="Retape nouvo modpas la" />
+                <button type="button" class="auth-password-toggle" data-password-toggle aria-label="Montre modpas la">
+                  <i data-lucide="eye" aria-hidden="true"></i>
+                </button>
+              </span>
+            </label>
+            <button type="submit" class="auth-submit">Mete ajou modpas</button>
+          </form>
+        </section>
+
+        <section class="profile-panel profile-panel-actions">
+          <button id="logout-button" class="profile-logout" type="button">Dekonekte</button>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="profile.js"></script>
+  </body>
+</html>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Penal Lakay | Jeu de penalti multijoueur avec coins</title>
+    <meta
+      name="description"
+      content="Penal Lakay est un jeu de penalti multijoueur en ligne. Cree ou rejoins un match, mise des coins, affronte un autre joueur et gagne le pot."
+    />
+    <meta name="keywords" content="Penal Lakay, penalty lakay, penalti, jeu multijoueur, jeu de football, tir au but, coins, Haiti" />
+    <meta name="author" content="Penal Lakay" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://penallakay.com/" />
+    <link rel="sitemap" type="application/xml" href="https://penallakay.com/sitemap.xml" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="icon" href="/assets/images/logo%20(2).png" />
+    <link rel="apple-touch-icon" href="/assets/images/logo%20(2).png" />
+    <meta name="theme-color" content="#02070d" />
+    <meta property="og:site_name" content="Penal Lakay" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Penal Lakay | Jeu de penalti multijoueur avec coins" />
+    <meta
+      property="og:description"
+      content="Cree ou rejoins une salle de penalti multijoueur, mise des coins et gagne le pot contre un autre joueur."
+    />
+    <meta property="og:url" content="https://penallakay.com/" />
+    <meta property="og:image" content="https://penallakay.com/assets/images/decordesktop.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Penal Lakay | Jeu de penalti multijoueur avec coins" />
+    <meta
+      name="twitter:description"
+      content="Joue au penalti multijoueur en ligne, cree une salle, mise des coins et gagne le pot."
+    />
+    <meta name="twitter:image" content="https://penallakay.com/assets/images/decordesktop.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        "name": "Penal Lakay",
+        "url": "https://penallakay.com/",
+        "description": "Jeu de penalti multijoueur en ligne avec matchs entre joueurs et systeme de coins.",
+        "applicationCategory": "Game",
+        "genre": ["Sports", "Multiplayer"],
+        "operatingSystem": "Web",
+        "inLanguage": ["fr", "ht"],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              pitch: {
+                base: "#02070d",
+                panel: "rgba(5, 13, 22, 0.56)",
+                line: "rgba(255, 255, 255, 0.12)",
+                accent: "#69f0b1",
+                goal: "#ffd463",
+                save: "#ff7566",
+                pending: "rgba(255, 255, 255, 0.22)",
+                text: "#f6fbff",
+                muted: "rgba(246, 251, 255, 0.76)"
+              }
+            },
+            boxShadow: {
+              panel: "0 18px 40px rgba(0, 0, 0, 0.28)"
+            },
+            fontFamily: {
+              display: ["Trebuchet MS", "Segoe UI", "sans-serif"]
+            }
+          }
+        }
+      };
+    </script>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore-compat.js"></script>
+    <script>
+      window.firebaseConfig = {
+        apiKey: "AIzaSyBrXTbRG9IrQAnNyC7JCh0Uf6XfLouPKu4",
+        authDomain: "penallakay.firebaseapp.com",
+        projectId: "penallakay",
+        storageBucket: "penallakay.firebasestorage.app",
+        messagingSenderId: "218407706721",
+        appId: "1:218407706721:web:2e6b902b21f35225b10a20",
+        measurementId: "G-NZZZ5GZFML"
+      };
+    </script>
+  </head>
+  <body class="m-0 h-full w-full overflow-hidden bg-black font-display text-pitch-text">
+    <div id="splash-screen" class="splash-screen" aria-hidden="true">
+      <img src="assets/images/logo (2).png" alt="Penal Lakay" class="splash-logo" draggable="false" />
+    </div>
+
+    <main class="game-wrapper is-home relative flex h-dvh min-h-screen w-screen items-center justify-center overflow-hidden bg-black">
+      <picture class="home-background" aria-hidden="true">
+        <source media="(max-width: 767px)" srcset="assets/images/decorphone.png" />
+        <img
+          class="home-background-image"
+          src="assets/images/decordesktop.png"
+          alt=""
+          aria-hidden="true"
+          draggable="false"
+        />
+      </picture>
+
+      <section class="site-chrome" aria-label="Interface principale">
+        <header class="app-header">
+          <button id="open-chat" class="chrome-icon" type="button" aria-label="Messages">
+            <i data-lucide="message-circle" aria-hidden="true"></i>
+            <span id="chat-unread-dot" class="chat-unread-dot" aria-hidden="true" hidden></span>
+          </button>
+
+          <h1 class="app-title" aria-label="Penal Lakay">Penal Lakay</h1>
+
+          <a id="header-user-link" class="header-user is-hidden" href="profil.html" aria-label="Profil jwè">
+            <span id="header-username">Jwe</span>
+          </a>
+
+          <button id="open-auth" class="chrome-icon chrome-profile" type="button" aria-label="Connexion">
+            <i data-lucide="user-round" aria-hidden="true"></i>
+            <span class="profile-dot" aria-hidden="true"></span>
+          </button>
+        </header>
+
+        <section class="home-hero" aria-label="Accueil">
+          <button id="enter-game" class="play-cta" type="button">
+            <span class="play-cta-label">JWE KOUNYE A</span>
+            <span class="play-cta-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>
+          </button>
+        </section>
+
+        <nav class="bottom-nav" aria-label="Navigation principale">
+          <button class="bottom-nav-item" id="open-withdraw-guide" type="button">
+            <span class="bottom-nav-icon" aria-hidden="true"><i data-lucide="arrow-down-left"></i></span>
+            <span>Retre</span>
+          </button>
+          <button class="bottom-nav-item" id="open-games-chat" type="button">
+            <span class="bottom-nav-icon" aria-hidden="true"><i data-lucide="gamepad-2"></i></span>
+            <span>Jeux</span>
+          </button>
+          <button id="open-shop-balance" class="bottom-nav-coin" type="button" aria-label="Ouvrir la boutique coin">
+            <span class="bottom-nav-coin-shell">
+              <span class="bottom-nav-coin-ring">
+                <img src="assets/images/coin.png" alt="" class="bottom-nav-coin-image" aria-hidden="true" draggable="false" />
+                <strong id="coin-balance" class="bottom-nav-coin-value">0</strong>
+                <span class="bottom-nav-coin-label">Coin</span>
+              </span>
+            </span>
+          </button>
+          <button class="bottom-nav-item" id="open-shop" type="button">
+            <span class="bottom-nav-icon" aria-hidden="true"><i data-lucide="shopping-cart"></i></span>
+            <span>Boutique</span>
+          </button>
+          <button class="bottom-nav-item" id="open-auth-bottom" type="button">
+            <span class="bottom-nav-icon" aria-hidden="true"><i data-lucide="user-round"></i></span>
+            <span>Profil</span>
+          </button>
+        </nav>
+      </section>
+
+      <section id="auth-modal" class="auth-modal" aria-hidden="true" hidden>
+        <div class="auth-card">
+          <div class="auth-card-head">
+            <strong class="auth-title">Kont jwè</strong>
+            <button id="close-auth" class="chrome-icon chrome-icon-small" type="button" aria-label="Femen">X</button>
+          </div>
+
+          <div class="auth-tabs">
+            <button class="auth-tab is-active" type="button" data-auth-tab="signup">Kreye kont</button>
+            <button class="auth-tab" type="button" data-auth-tab="login">Konekte</button>
+          </div>
+
+          <p id="auth-feedback" class="auth-feedback" aria-live="polite"></p>
+
+          <form id="auth-login-form" class="auth-form">
+            <label>
+              <span>Non itilizate</span>
+              <input type="text" name="username" autocomplete="username" placeholder="Antre non ou" />
+            </label>
+            <label>
+              <span>Modpas</span>
+              <span class="auth-password">
+                <input type="password" name="password" autocomplete="current-password" placeholder="••••••••" />
+                <button type="button" class="auth-password-toggle" data-password-toggle aria-label="Montre modpas la">
+                  <i data-lucide="eye" aria-hidden="true"></i>
+                </button>
+              </span>
+            </label>
+            <button type="submit" class="auth-submit">Konekte</button>
+            <p class="auth-note">Ou konekte ak non itilizate ou ak modpas ou.</p>
+            <a class="auth-link" href="#auth-signup-form" data-auth-switch="signup">Ou poko gen yon kont? Kreye kounye a</a>
+          </form>
+
+          <form id="auth-signup-form" class="auth-form is-hidden">
+            <label>
+              <span>Non itilizate</span>
+              <input type="text" name="username" autocomplete="username" placeholder="Non jwe a" />
+            </label>
+            <label>
+              <span>Modpas</span>
+              <span class="auth-password">
+                <input type="password" name="password" autocomplete="new-password" placeholder="Kreye yon modpas" />
+                <button type="button" class="auth-password-toggle" data-password-toggle aria-label="Montre modpas la">
+                  <i data-lucide="eye" aria-hidden="true"></i>
+                </button>
+              </span>
+            </label>
+            <label>
+              <span>Konfime modpas la</span>
+              <span class="auth-password">
+                <input type="password" name="confirmPassword" autocomplete="new-password" placeholder="Retape modpas la" />
+                <button type="button" class="auth-password-toggle" data-password-toggle aria-label="Montre modpas la">
+                  <i data-lucide="eye" aria-hidden="true"></i>
+                </button>
+              </span>
+            </label>
+            <label class="auth-check">
+              <input type="checkbox" name="age18" />
+              <span>Mwen gen plis pase 18 an</span>
+            </label>
+            <label class="auth-check">
+              <input type="checkbox" name="acceptTerms" />
+              <span>Mwen aksepte kondisyon itilizasyon ak konfidansyalite</span>
+            </label>
+            <button type="submit" class="auth-submit">Kreye kont</button>
+            <a class="auth-link" href="#auth-login-form" data-auth-switch="login">Siw gen yon kont deja, klike la</a>
+          </form>
+        </div>
+      </section>
+
+      <section id="chat-modal" class="chat-modal" aria-hidden="true" hidden>
+        <div class="chat-card" role="dialog" aria-modal="true" aria-labelledby="chat-title">
+          <div class="chat-card-head">
+            <div class="chat-head-actions">
+              <button id="open-invite-modal" class="chat-invite-trigger" type="button" aria-label="Invite Jwe">
+                <i data-lucide="user-plus" aria-hidden="true"></i>
+                <span>Invite Jwe</span>
+              </button>
+              <div class="chat-online-chip" aria-live="polite">
+                <span class="chat-online-dot" aria-hidden="true"></span>
+                <span id="chat-online-count">0</span>
+                <span class="chat-online-label">en ligne</span>
+              </div>
+              <button id="close-chat" class="chrome-icon chrome-icon-small" type="button" aria-label="Femen chat la">X</button>
+            </div>
+          </div>
+
+          <div id="chat-messages" class="chat-messages" aria-live="polite">
+            <article class="chat-message">
+              <span class="chat-author">Mika</span>
+              <p>Nou pare pou match la?</p>
+            </article>
+            <article class="chat-message">
+              <span class="chat-author">Sonia</span>
+              <p>Wi, mwen deja sou liy la.</p>
+            </article>
+            <article class="chat-message is-own">
+              <span class="chat-author">Ou</span>
+              <p>Mwen antre nan salon an.</p>
+            </article>
+          </div>
+
+          <p id="chat-feedback" class="chat-feedback" aria-live="polite"></p>
+
+          <form id="chat-form" class="chat-form">
+            <div id="chat-reply-preview" class="chat-reply-preview is-hidden">
+              <div class="chat-reply-preview-copy">
+                <span class="chat-reply-preview-label">Réponse à</span>
+                <strong id="chat-reply-preview-author" class="chat-reply-preview-author"></strong>
+                <p id="chat-reply-preview-text" class="chat-reply-preview-text"></p>
+              </div>
+              <button id="cancel-chat-reply" class="chat-reply-cancel" type="button" aria-label="Annuler la réponse">X</button>
+            </div>
+            <input
+              id="chat-input"
+              class="chat-input"
+              type="text"
+              name="message"
+              maxlength="220"
+              placeholder="Ekri yon mesaj..."
+              autocomplete="off"
+            />
+            <button class="chat-send" type="submit">Voye</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="invite-modal" class="invite-modal" aria-hidden="true" hidden>
+        <div class="invite-card" role="dialog" aria-modal="true" aria-labelledby="invite-title">
+          <div class="invite-card-head">
+            <div>
+              <strong id="invite-title" class="invite-title">Invite Jwe</strong>
+              <p class="invite-subtitle">Voye envitasyon oswa itilize yon kod.</p>
+            </div>
+            <button id="close-invite-modal" class="chrome-icon chrome-icon-small" type="button" aria-label="Femen modal envitasyon an">X</button>
+          </div>
+
+          <div class="invite-actions">
+            <label class="invite-code-field">
+              <span class="invite-panel-label">Miz match la</span>
+              <input id="invite-wager-input" type="number" min="25" step="1" value="25" inputmode="numeric" />
+            </label>
+            <button id="send-group-invite" class="invite-action invite-action-primary" type="button">Voye on invitation sou group la</button>
+            <button id="generate-invite-code" class="invite-action" type="button">Jwenn on kod invitation</button>
+            <button id="show-have-code" class="invite-action" type="button">Mwn gen on kod invitation</button>
+          </div>
+
+          <div id="invite-code-panel" class="invite-panel is-hidden">
+            <label class="invite-code-field">
+              <span class="invite-panel-label">Miz match la</span>
+              <input id="invite-code-wager-input" type="number" min="25" step="1" value="25" inputmode="numeric" />
+            </label>
+            <button id="confirm-generate-invite-code" class="invite-action invite-action-primary" type="button">Kreye kod la</button>
+            <div id="invite-code-result" class="invite-code-result is-hidden">
+              <span class="invite-panel-label">Kod envitasyon ou</span>
+              <strong id="invite-code-output" class="invite-code-output">PK-000000</strong>
+              <p id="invite-code-note" class="invite-panel-note">Pataje kod sa ak jwe ou vle envite a.</p>
+              <div class="invite-code-actions">
+                <button id="copy-invite-code" class="invite-action" type="button">Kopye kod la</button>
+                <button id="enter-generated-match" class="invite-action invite-action-primary" type="button">Rejoindre le match</button>
+              </div>
+            </div>
+          </div>
+
+          <form id="have-code-form" class="invite-panel is-hidden">
+            <label class="invite-code-field">
+              <span class="invite-panel-label">Antre kod envitasyon an</span>
+              <input id="have-code-input" type="text" maxlength="20" placeholder="PK-123ABC" autocomplete="off" />
+            </label>
+            <button id="verify-invite-code" class="invite-action" type="button">Verifye kod la</button>
+            <button id="join-verified-code" class="invite-action invite-action-primary is-hidden" type="submit">Rejoindre le match</button>
+          </form>
+
+          <p id="invite-status" class="invite-status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section id="shop-modal" class="shop-modal" aria-hidden="true" hidden>
+        <div class="shop-screen" role="dialog" aria-modal="true" aria-labelledby="shop-title">
+          <div class="shop-screen-backdrop" aria-hidden="true"></div>
+          <div class="shop-screen-panel">
+            <section class="shop-toolbar" aria-label="Filtres boutique">
+              <button id="close-shop" class="chrome-icon chrome-icon-small shop-close" type="button" aria-label="Fèmen boutique la">
+                <i data-lucide="x" aria-hidden="true"></i>
+              </button>
+              <div class="shop-filter-bar" role="tablist" aria-label="Filtrer les contacts boutique">
+                <button class="shop-filter-button is-active" type="button" data-shop-filter="seller" aria-pressed="true">
+                  <span>Vente</span>
+                </button>
+                <button class="shop-filter-button" type="button" data-shop-filter="buyer" aria-pressed="false">
+                  <span>Achat</span>
+                </button>
+                <button class="shop-filter-button" type="button" data-shop-filter="history" aria-pressed="false">
+                  <span>Istorik</span>
+                </button>
+              </div>
+            </section>
+
+            <a
+              id="shop-apply-link"
+              class="shop-apply-link"
+              href="https://wa.me/50935601379"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Aplike pou vinn vendeur kounye a"
+            >
+              <span>Aplike pou vinn vendeur kounye a</span>
+            </a>
+
+            <section id="shop-rate-banner" class="shop-rate-banner" aria-label="Taux officiel du jour">
+              <strong class="shop-rate-title">Taux officiel du jour</strong>
+              <p class="shop-rate-line">Achat : 100 HTG pour 90 coin</p>
+              <p class="shop-rate-line">Vente : 90 HTG pour 100 coin</p>
+              <p class="shop-rate-warning">Attention : pa janm vann oswa achte a yon pri diferan.</p>
+            </section>
+
+            <section class="shop-directory" aria-label="Contacts officiels">
+              <div id="shop-contact-list" class="shop-contact-list"></div>
+              <button id="shop-history-more" class="shop-history-more is-hidden" type="button">Voir plus</button>
+            </section>
+          </div>
+        </div>
+      </section>
+
+      <section id="play-guide-modal" class="guide-modal" aria-hidden="true" hidden>
+        <div class="guide-card" role="dialog" aria-modal="true" aria-labelledby="play-guide-title">
+          <div class="guide-card-head">
+            <strong id="play-guide-title" class="guide-title">Anvan ou jwe</strong>
+          </div>
+
+          <p class="guide-text">
+            Pou ou kapab jwe, ou dwe monte nan messagerie a pou mande kiyès k ap jwe, oubyen voye yon demand de jwèt.
+            Moun ki disponib ap rantre nan sal ou a.
+          </p>
+
+          <div class="guide-actions">
+            <button id="play-guide-understood" class="guide-button guide-button-primary" type="button">Mwen konprann</button>
+            <button id="play-guide-dismiss-forever" class="guide-button guide-button-secondary" type="button">
+              Pa montre m mesaj sa ankò
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="withdraw-guide-modal" class="guide-modal" aria-hidden="true" hidden>
+        <div class="guide-card" role="dialog" aria-modal="true" aria-labelledby="withdraw-guide-title">
+          <div class="guide-card-head">
+            <strong id="withdraw-guide-title" class="guide-title">Retre Coins</strong>
+          </div>
+
+          <p class="guide-text">
+            Pou fe retre fok ou kontakte on vendeur pou kapab vann li coin ou yo, ou kapab kontakte vandeur ki te vann
+            on coin w yo.
+          </p>
+
+          <div class="guide-actions">
+            <button id="withdraw-guide-understood" class="guide-button guide-button-primary" type="button">Mwn konprann</button>
+            <button id="withdraw-guide-dismiss-forever" class="guide-button guide-button-secondary" type="button">
+              Pa montre m mesaj sa anko
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section id="sell-coins-modal" class="auth-modal" aria-hidden="true" hidden>
+        <div class="auth-card sell-coins-card" role="dialog" aria-modal="true" aria-labelledby="sell-coins-title">
+          <div class="auth-card-head">
+            <strong id="sell-coins-title" class="auth-title">Vann Coins</strong>
+            <button id="close-sell-coins" class="chrome-icon chrome-icon-small" type="button" aria-label="Femen modal vann coins la">
+              X
+            </button>
+          </div>
+
+          <p id="sell-coins-agent" class="sell-coins-agent"></p>
+          <p id="sell-coins-feedback" class="auth-feedback" aria-live="polite"></p>
+
+          <form id="sell-coins-form" class="auth-form">
+            <label>
+              <span>Konbyen coin ou vle vann?</span>
+              <input
+                id="sell-coins-amount"
+                type="number"
+                name="coinAmount"
+                min="1"
+                step="1"
+                inputmode="numeric"
+                placeholder="Egzanp: 500"
+              />
+            </label>
+            <button id="submit-sell-coins" type="submit" class="auth-submit">Vendre mes coins</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="home.js"></script>
+  </body>
+</html>

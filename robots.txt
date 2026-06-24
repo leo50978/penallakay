@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /dashboards/
+
+Sitemap: https://penallakay.com/sitemap.xml
