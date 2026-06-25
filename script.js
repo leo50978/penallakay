@@ -3,11 +3,14 @@ import {
   advanceMatchTurn,
   getCurrentUser,
   initFirebaseClient,
+  loadBotDashboardStats,
   listenMatchRoom,
   loadMatchRoom,
   loadUserProfile,
   markMatchParticipantInGame,
   markMatchParticipantLeft,
+  recordBotMatchResult,
+  recordSiteVisit,
   requestMatchRematch,
   resolveMatchTurn,
   settleMatchWagerForPlayer,
@@ -90,6 +93,18 @@ const matchContext = {
   opponentInGame: false,
   activeRematchId: "",
   handledRematchId: "",
+};
+
+const botControlState = {
+  mode: "weak",
+  effectiveLevel: "weak",
+  autoStrongBelowNet: -250,
+  autoWeakAboveNet: 500,
+};
+
+const botMemoryState = {
+  playerShotZones: [],
+  playerKeeperZones: [],
 };
 
 let matchRoomUnsubscribe = null;
@@ -1108,7 +1123,75 @@ function clearBotReactionTimeout() {
   }
 }
 
+function getMostUsedZone(zones = []) {
+  const counts = zones.reduce((result, zone) => {
+    if (keeperDecorZones.includes(zone)) {
+      result[zone] = (result[zone] || 0) + 1;
+    }
+    return result;
+  }, {});
+  return Object.entries(counts).sort((left, right) => right[1] - left[1])[0]?.[0] || "";
+}
+
+function chooseRandomZone(zones = keeperDecorZones) {
+  const options = zones.length ? zones : keeperDecorZones;
+  return options[Math.floor(Math.random() * options.length)] || "middle-center";
+}
+
+function resolveBotEffectiveLevel(settings = {}, summary = {}) {
+  const mode = ["weak", "strong", "auto"].includes(settings.mode) ? settings.mode : "weak";
+  const autoStrongBelowNet = Math.floor(Number(settings.autoStrongBelowNet ?? -250));
+  const autoWeakAboveNet = Math.floor(Number(settings.autoWeakAboveNet ?? 500));
+  const botNetCoins = Number(summary.botNetCoins || 0);
+  const effectiveLevel = mode === "auto"
+    ? botNetCoins <= autoStrongBelowNet ? "strong" : "weak"
+    : mode;
+
+  botControlState.mode = mode;
+  botControlState.effectiveLevel = effectiveLevel;
+  botControlState.autoStrongBelowNet = autoStrongBelowNet;
+  botControlState.autoWeakAboveNet = autoWeakAboveNet;
+}
+
+async function hydrateBotControlState() {
+  try {
+    const dashboardData = await loadBotDashboardStats(1);
+    resolveBotEffectiveLevel(dashboardData.settings || {}, dashboardData.summary || {});
+  } catch (_) {
+    resolveBotEffectiveLevel({}, {});
+  }
+}
+
+function chooseBotKeeperZone() {
+  if (botControlState.effectiveLevel !== "strong") {
+    return chooseRandomZone(keeperDecorZones);
+  }
+
+  const likelyShotZone = getMostUsedZone(botMemoryState.playerShotZones);
+  if (likelyShotZone && Math.random() < 0.58) {
+    return likelyShotZone;
+  }
+
+  return chooseRandomZone(keeperDecorZones);
+}
+
+function chooseBotShotZone(shotOptions = getPlayableShotZones()) {
+  if (botControlState.effectiveLevel !== "strong") {
+    return chooseRandomZone(shotOptions);
+  }
+
+  const likelyKeeperZone = getMostUsedZone(botMemoryState.playerKeeperZones);
+  const saferOptions = likelyKeeperZone ? shotOptions.filter((zone) => zone !== likelyKeeperZone) : shotOptions;
+  if (saferOptions.length && Math.random() < 0.72) {
+    return chooseRandomZone(saferOptions);
+  }
+
+  return chooseRandomZone(shotOptions);
+}
+
 function initializeBotMatchState() {
+  botMemoryState.playerShotZones = [...shootoutState.playerShots];
+  botMemoryState.playerKeeperZones = [];
   setLocalTurnDeadline(Date.now() + 15000);
   syncDecorForTurn(false);
   resetKeepersToGoalCenter();
@@ -1152,6 +1235,7 @@ async function hydrateMatchContext() {
       matchContext.isBot = true;
       matchContext.role = isHostPlayer ? "host" : "guest";
       matchContext.playerUid = user?.uid || "";
+      await hydrateBotControlState();
       refreshGameCoinBalance();
       setStatus(`Match contre ${room.hostUsername || DEFAULT_OPPONENT_NAME}.`);
       await startMatchRoomSync();
@@ -1430,6 +1514,17 @@ function settleFinishedLocalMatch(didWin) {
   })
     .then((settlement) => {
       refreshGameCoinBalance();
+      if (matchContext.isBot) {
+        recordBotMatchResult({
+          code: matchContext.code,
+          userUid: matchContext.playerUid,
+          didPlayerWin: didWin,
+          settlement,
+          finalState: getShootoutSyncState("game-over"),
+          botMode: botControlState.mode,
+          botLevel: botControlState.effectiveLevel,
+        }).catch(() => {});
+      }
       showGameOverModal(0, settlement);
     })
     .catch(() => {
@@ -1441,6 +1536,8 @@ function resetLocalMatchForRematch() {
   stopTurnCountdown();
   clearBotReactionTimeout();
   clearPickedShotTargets();
+  botMemoryState.playerShotZones = [];
+  botMemoryState.playerKeeperZones = [];
   aimTarget.classList.remove("is-choice-locked");
   keeper.classList.remove("is-choice-locked");
   shootoutState.playerGoals = 0;
@@ -1460,6 +1557,7 @@ function resetLocalMatchForRematch() {
   resetKeepersToGoalCenter();
   resetBall(true);
   if (matchContext.isBot) {
+    hydrateBotControlState().catch(() => {});
     syncBotTurnStatus();
   }
 }
@@ -1633,6 +1731,42 @@ function stopTurnCountdown() {
   }
 }
 
+function handleTurnCountdownExpired() {
+  if (shootoutState.gameOver || shootoutState.actionLocked || isWaitingForMatchOpponent()) {
+    return;
+  }
+
+  aimState.active = false;
+  keeperPlacementState.active = false;
+  aimTarget.classList.remove("is-dragging");
+  keeper.classList.remove("is-dragging");
+
+  if (shootoutState.turn === "player-shoot") {
+    const zone = chooseRandomZone(getPlayableShotZones());
+    setStatus("Temps fini. Tir automatique.");
+    if (matchContext.isMultiplayer) {
+      animateAimChoice();
+      submitMultiplayerChoice("shot", normalizeMatchZone(zone));
+      return;
+    }
+
+    launchPlayerShot(zone);
+    return;
+  }
+
+  if (shootoutState.turn === "cpu-shoot") {
+    const zone = chooseRandomZone(keeperDecorZones);
+    setStatus("Temps fini. Parade automatique.");
+    if (matchContext.isMultiplayer) {
+      animateKeeperChoice();
+      submitMultiplayerChoice("keeper", normalizeMatchZone(zone));
+      return;
+    }
+
+    launchCpuShot(zone);
+  }
+}
+
 function startTurnCountdown(resolveAt) {
   if (!turnCountdown || !turnCountdownValue) {
     return;
@@ -1673,6 +1807,7 @@ function startTurnCountdown(resolveAt) {
     }
 
     stopTurnCountdown();
+    handleTurnCountdownExpired();
   };
 
   tick();
@@ -2225,6 +2360,9 @@ function resolvePlayerShot(keeperZone, shotZone) {
   const isSave = keeperZone === shotZone;
 
   shootoutState.playerShots.push(isSave ? "save" : "goal");
+  if (matchContext.isBot) {
+    botMemoryState.playerShotZones.push(shotZone);
+  }
   if (!isSave) {
     shootoutState.playerGoals += 1;
   }
@@ -2242,6 +2380,9 @@ function resolveCpuShot(shotZone) {
   const isSave = keeperZone === shotZone;
 
   shootoutState.cpuShots.push(isSave ? "save" : "goal");
+  if (matchContext.isBot) {
+    botMemoryState.playerKeeperZones.push(keeperZone);
+  }
   if (!isSave) {
     shootoutState.cpuGoals += 1;
   }
@@ -2260,8 +2401,7 @@ function launchPlayerShot(shotZone = "center", forcedKeeperZone = "") {
   }
 
   unlockAudio();
-  const keeperOptions = keeperDecorZones;
-  const keeperZone = forcedKeeperZone || keeperOptions[Math.floor(Math.random() * keeperOptions.length)];
+  const keeperZone = forcedKeeperZone || chooseBotKeeperZone();
 
   shootoutState.actionLocked = true;
   updateControls();
@@ -2342,7 +2482,7 @@ function launchCpuShot(keeperZone = "center", forcedShotZone = "") {
   syncShotMapLayout();
   const keeperPoint = getZonePoint(keeperZone);
   const shotOptions = getPlayableShotZones();
-  const shotZone = forcedShotZone || shotOptions[Math.floor(Math.random() * shotOptions.length)];
+  const shotZone = forcedShotZone || chooseBotShotZone(shotOptions);
   const shotPoint = getZonePoint(shotZone);
   const shotVector = createShotVector(shotPoint);
   if (shotMap) {
@@ -2715,6 +2855,7 @@ window.addEventListener("beforeunload", markCurrentPlayerLeft);
 
 initLucideIcons();
 if (isGamePage) {
+  initFirebaseClient().then(() => recordSiteVisit("game")).catch(() => {});
   setAppPhase("game");
   resizeGame();
   resetKeepersToGoalCenter();

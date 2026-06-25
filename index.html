@@ -17,6 +17,9 @@
     <link rel="icon" href="/assets/images/logo%20(2).png" />
     <link rel="apple-touch-icon" href="/assets/images/logo%20(2).png" />
     <meta name="theme-color" content="#02070d" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Penal Lakay" />
     <meta property="og:site_name" content="Penal Lakay" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Penal Lakay | Jeu de penalti multijoueur avec coins" />
@@ -153,7 +156,6 @@
               <span class="bottom-nav-coin-ring">
                 <img src="assets/images/coin.png" alt="" class="bottom-nav-coin-image" aria-hidden="true" draggable="false" />
                 <strong id="coin-balance" class="bottom-nav-coin-value">0</strong>
-                <span class="bottom-nav-coin-label">Coin</span>
               </span>
             </span>
           </button>
@@ -166,6 +168,11 @@
             <span>Profil</span>
           </button>
         </nav>
+
+        <button id="pwa-install-pill" class="pwa-install-pill" type="button" hidden>
+          <span class="pwa-install-icon" aria-hidden="true"><i data-lucide="download"></i></span>
+          <span>Installer l'app</span>
+        </button>
       </section>
 
       <section id="auth-modal" class="auth-modal" aria-hidden="true" hidden>
@@ -432,6 +439,42 @@
         </div>
       </section>
 
+      <section id="pwa-install-modal" class="guide-modal pwa-install-modal" aria-hidden="true" hidden>
+        <div class="pwa-install-card" role="dialog" aria-modal="true" aria-labelledby="pwa-install-title">
+          <div class="pwa-install-head">
+            <img src="assets/images/logo (2).png" alt="" aria-hidden="true" draggable="false" />
+            <div>
+              <span class="pwa-install-kicker">Application</span>
+              <strong id="pwa-install-title">Installer Penal Lakay</strong>
+            </div>
+            <button id="pwa-install-close" class="pwa-install-close" type="button" aria-label="Fermer">
+              <i data-lucide="x" aria-hidden="true"></i>
+            </button>
+          </div>
+
+          <p id="pwa-install-copy" class="pwa-install-copy">
+            Ajoute Penal Lakay sur ton appareil pour ouvrir le jeu plus vite, avec une experience plein ecran.
+          </p>
+
+          <div id="pwa-install-benefits" class="pwa-install-benefits">
+            <span><i data-lucide="zap" aria-hidden="true"></i> Acces rapide</span>
+            <span><i data-lucide="smartphone" aria-hidden="true"></i> Plein ecran</span>
+            <span><i data-lucide="shield-check" aria-hidden="true"></i> App officielle</span>
+          </div>
+
+          <ol id="pwa-ios-steps" class="pwa-ios-steps" hidden>
+            <li>Appuie sur le bouton Partager dans Safari.</li>
+            <li>Choisis Ajouter a l'ecran d'accueil.</li>
+            <li>Confirme avec Ajouter.</li>
+          </ol>
+
+          <div class="pwa-install-actions">
+            <button id="pwa-install-confirm" class="pwa-install-primary" type="button">Installer</button>
+            <button id="pwa-install-later" class="pwa-install-secondary" type="button">Plus tard</button>
+          </div>
+        </div>
+      </section>
+
       <section id="sell-coins-modal" class="auth-modal" aria-hidden="true" hidden>
         <div class="auth-card sell-coins-card" role="dialog" aria-modal="true" aria-labelledby="sell-coins-title">
           <div class="auth-card-head">
@@ -464,5 +507,6 @@
     </main>
 
     <script type="module" src="home.js"></script>
+    <script src="pwa.js" defer></script>
   </body>
 </html>

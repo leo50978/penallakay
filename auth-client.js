@@ -685,6 +685,167 @@ export async function updateMatchRoomGameState({ code, state }) {
   );
 }
 
+export async function recordBotMatchResult({ code, userUid = "", didPlayerWin = false, settlement = null, finalState = null, botMode = "weak", botLevel = "weak" }) {
+  const { db } = await initFirebaseClient();
+  const cleanCode = String(code || "").trim().toUpperCase();
+  if (!cleanCode) {
+    throw new Error("missing-code");
+  }
+
+  const roomRef = db.collection("matchRooms").doc(cleanCode);
+  const summaryRef = db.collection("botDashboardSummary").doc("global");
+
+  return db.runTransaction(async (transaction) => {
+    const roomSnapshot = await transaction.get(roomRef);
+    if (!roomSnapshot.exists) {
+      throw new Error("room-not-found");
+    }
+
+    const room = roomSnapshot.data() || {};
+    const state = room.gameState || {};
+    if (!room.isBot || state.botDashboardRecorded) {
+      return null;
+    }
+
+    const sourceState = finalState || state;
+    const wagerCoins = Math.max(25, Math.floor(Number(room.wagerCoins || settlement?.wagerCoins || sourceState.wagerCoins || 25)));
+    const payoutCoins = Math.max(0, Math.floor(Number(settlement?.payoutCoins || sourceState.payoutCoins || 0)));
+    const playerGoals = Number(sourceState.playerGoals || 0);
+    const botGoals = Number(sourceState.cpuGoals || 0);
+    const botDidWin = !Boolean(didPlayerWin);
+    const botCoinsWon = botDidWin ? wagerCoins : 0;
+    const botCoinsLost = botDidWin ? 0 : wagerCoins;
+    const endedClientAt = Date.now();
+    const resultId = `${cleanCode}-${endedClientAt}`;
+    const resultRef = db.collection("botMatchResults").doc(resultId);
+    const payload = {
+      id: resultId,
+      matchCode: cleanCode,
+      playerUid: String(userUid || room.botGuestForHostUid || room.hostUid || ""),
+      playerUsername: String(room.botGuestForHostUsername || "Jwe"),
+      botName: String(room.hostUsername || "Bot"),
+      botMode: String(botMode || "weak"),
+      botLevel: String(botLevel || botMode || "weak"),
+      playerGoals,
+      botGoals,
+      playerDidWin: Boolean(didPlayerWin),
+      botDidWin,
+      wagerCoins,
+      payoutCoins,
+      botCoinsWon,
+      botCoinsLost,
+      botNetCoins: botCoinsWon - botCoinsLost,
+      playerShots: Array.isArray(sourceState.playerShots) ? sourceState.playerShots : [],
+      botShots: Array.isArray(sourceState.cpuShots) ? sourceState.cpuShots : [],
+      endedClientAt,
+      createdAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+    };
+
+    transaction.set(resultRef, payload, { merge: true });
+    transaction.set(summaryRef, {
+      matchesPlayed: window.firebase.firestore.FieldValue.increment(1),
+      botWins: window.firebase.firestore.FieldValue.increment(botDidWin ? 1 : 0),
+      botLosses: window.firebase.firestore.FieldValue.increment(botDidWin ? 0 : 1),
+      botCoinsWon: window.firebase.firestore.FieldValue.increment(botCoinsWon),
+      botCoinsLost: window.firebase.firestore.FieldValue.increment(botCoinsLost),
+      botNetCoins: window.firebase.firestore.FieldValue.increment(botCoinsWon - botCoinsLost),
+      updatedAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+      updatedClientAt: endedClientAt,
+    }, { merge: true });
+    transaction.set(roomRef, {
+      gameState: {
+        ...state,
+        playerGoals,
+        cpuGoals: botGoals,
+        playerShots: Array.isArray(sourceState.playerShots) ? sourceState.playerShots : state.playerShots,
+        cpuShots: Array.isArray(sourceState.cpuShots) ? sourceState.cpuShots : state.cpuShots,
+        gameOver: true,
+        botDashboardRecorded: true,
+        botDashboardResultId: resultId,
+      },
+      updatedAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    return payload;
+  });
+}
+
+export async function loadBotDashboardStats(limit = 80) {
+  const { db } = await initFirebaseClient();
+  const safeLimit = Math.max(1, Math.min(200, Number(limit) || 80));
+  const [summarySnapshot, resultsSnapshot, settingsSnapshot] = await Promise.all([
+    db.collection("botDashboardSummary").doc("global").get(),
+    db.collection("botMatchResults").orderBy("endedClientAt", "desc").limit(safeLimit).get(),
+    db.collection("botSettings").doc("global").get(),
+  ]);
+
+  return {
+    summary: summarySnapshot.exists ? summarySnapshot.data() || {} : {},
+    settings: settingsSnapshot.exists ? settingsSnapshot.data() || {} : {},
+    matches: resultsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    })),
+  };
+}
+
+export async function loadBotSettings() {
+  const { db } = await initFirebaseClient();
+  const snapshot = await db.collection("botSettings").doc("global").get();
+  return snapshot.exists ? snapshot.data() || {} : {};
+}
+
+export async function saveBotSettings(settings = {}) {
+  const { db } = await initFirebaseClient();
+  const cleanMode = ["weak", "strong", "auto"].includes(settings.mode) ? settings.mode : "weak";
+  const autoStrongBelowNet = Math.floor(Number(settings.autoStrongBelowNet ?? -250));
+  const autoWeakAboveNet = Math.floor(Number(settings.autoWeakAboveNet ?? 500));
+  const payload = {
+    mode: cleanMode,
+    autoStrongBelowNet,
+    autoWeakAboveNet,
+    updatedClientAt: Date.now(),
+    updatedAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  await db.collection("botSettings").doc("global").set(payload, { merge: true });
+  return payload;
+}
+
+function getLocalDateKey(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export async function recordSiteVisit(page = "site") {
+  const { db } = await initFirebaseClient();
+  const cleanPage = String(page || "site").replace(/[^a-z0-9_-]+/gi, "-").slice(0, 32) || "site";
+  const dateKey = getLocalDateKey();
+  const storageKey = `penal-lakay-visit:${dateKey}:${cleanPage}`;
+
+  try {
+    if (window.localStorage.getItem(storageKey)) {
+      return null;
+    }
+    window.localStorage.setItem(storageKey, String(Date.now()));
+  } catch (_) {
+    // If localStorage is unavailable, still record the visit.
+  }
+
+  const payload = {
+    dateKey,
+    totalVisits: window.firebase.firestore.FieldValue.increment(1),
+    [`pages.${cleanPage}`]: window.firebase.firestore.FieldValue.increment(1),
+    updatedClientAt: Date.now(),
+    updatedAt: window.firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  await db.collection("siteVisitStats").doc(dateKey).set(payload, { merge: true });
+  return payload;
+}
+
 export async function submitMatchTurnChoice({ code, role, choiceType, zone }) {
   const { db } = await initFirebaseClient();
   const cleanCode = String(code || "").trim().toUpperCase();
@@ -1184,7 +1345,14 @@ export async function maybeSendSimulatedChatMessage({ idleMs = 7000, minOpenMs =
 
   if (nextMessage.type === "match-invite") {
     const code = `SIM-${now.toString(36).toUpperCase()}`;
-    const wagerCoins = 25 + (hashOnlineSeed(`wager-${nextMessage.sequence}`) % 976);
+    const simulatedWagerOptions = [
+      25, 25, 25,
+      50, 50, 50,
+      75, 75,
+      100, 100,
+      150, 200, 250, 300, 400, 500, 750, 1000,
+    ];
+    const wagerCoins = simulatedWagerOptions[hashOnlineSeed(`wager-${nextMessage.sequence}`) % simulatedWagerOptions.length];
     nextMessage.text = `${nextMessage.text} Miz la se ${wagerCoins} coins.`;
     payload.text = nextMessage.text;
     payload.invite = {

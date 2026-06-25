@@ -17,6 +17,7 @@ import {
   loginWithUsername,
   maybeSendSimulatedChatMessage,
   normalizeUsername,
+  recordSiteVisit,
   saveUserProfile,
   sellCoinsToVendor,
   sendChatMessage,
@@ -2307,6 +2308,7 @@ updateChatOnlineCount();
 
 initFirebaseClient()
   .then(() => {
+    recordSiteVisit("home").catch(() => {});
     ensureChatSubscription().catch(() => {});
     listenToAuthState(async (user) => {
       if (profileUnsubscribe) {
